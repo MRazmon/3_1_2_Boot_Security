@@ -1,15 +1,16 @@
 package ru.kata.spring.boot_security.demo.controller;
 
-import ru.kata.spring.boot_security.demo.model.User;
-import ru.kata.spring.boot_security.demo.model.Role;
-import ru.kata.spring.boot_security.demo.service.UserService;
-import ru.kata.spring.boot_security.demo.service.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import ru.kata.spring.boot_security.demo.model.Role;
+import ru.kata.spring.boot_security.demo.model.User;
+import ru.kata.spring.boot_security.demo.service.RoleService;
+import ru.kata.spring.boot_security.demo.service.UserService;
 
 import java.util.List;
+import java.util.Set;
 
 @Controller
 @RequestMapping("/admin")
@@ -26,8 +27,7 @@ public class AdminController {
 
     @GetMapping
     public String adminPanel(Model model) {
-        List<User> users = userService.findAll();
-        model.addAttribute("users", users);
+        model.addAttribute("users", userService.findAll());
         return "admin";
     }
 
@@ -35,41 +35,29 @@ public class AdminController {
     public String showAddForm(Model model) {
         model.addAttribute("user", new User());
         model.addAttribute("roles", roleService.findAll());
-        return "add_user";
+        return "edit_user";
     }
 
     @PostMapping("/add")
     public String addUser(@ModelAttribute User user,
-                          @RequestParam(value = "roleIds", required = false) List<Long> roleIds) {
-        if (roleIds != null) {
-            user.setRoles(roleService.findByIds(roleIds));
-        }
-        userService.save(user);
+                          @RequestParam(value = "roleIds") List<Long> roleIds) {
+        Set<Role> roles = roleService.findByIds(roleIds);
+        userService.saveUser(user, roles);
         return "redirect:/admin";
     }
 
     @GetMapping("/edit/{id}")
     public String showEditForm(@PathVariable Long id, Model model) {
-        User user = userService.findById(id);
-        model.addAttribute("user", user);
+        model.addAttribute("user", userService.findById(id));
         model.addAttribute("roles", roleService.findAll());
         return "edit_user";
     }
 
     @PostMapping("/edit")
     public String editUser(@ModelAttribute User user,
-                           @RequestParam(value = "roleIds", required = false) List<Long> roleIds) {
-        // Не перезаписываем пароль, если он не был изменён
-        User existingUser = userService.findById(user.getId());
-        if (user.getPassword() == null || user.getPassword().isEmpty()) {
-            user.setPassword(existingUser.getPassword());
-        } else {
-            userService.save(user); // зашифруется в сервисе
-        }
-        if (roleIds != null) {
-            user.setRoles(roleService.findByIds(roleIds));
-        }
-        userService.save(user);
+                           @RequestParam(value = "roleIds") List<Long> roleIds) {
+        Set<Role> roles = roleService.findByIds(roleIds);
+        userService.saveUser(user, roles);
         return "redirect:/admin";
     }
 

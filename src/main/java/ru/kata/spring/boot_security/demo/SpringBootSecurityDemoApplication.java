@@ -24,20 +24,17 @@ public class SpringBootSecurityDemoApplication {
 	                                  RoleRepository roleRepository,
 	                                  PasswordEncoder passwordEncoder) {
 		return args -> {
-			// Создаём роли, если их нет
 			Role roleUser = roleRepository.findByName("ROLE_USER")
 					.orElseGet(() -> roleRepository.save(new Role("ROLE_USER")));
 			Role roleAdmin = roleRepository.findByName("ROLE_ADMIN")
 					.orElseGet(() -> roleRepository.save(new Role("ROLE_ADMIN")));
 
-			// Создаём админа, если его нет
 			if (userRepository.findByUsername("admin").isEmpty()) {
 				User admin = new User("admin", passwordEncoder.encode("admin"), "admin@mail.com");
 				admin.setRoles(Set.of(roleAdmin, roleUser));
 				userRepository.save(admin);
 			}
 
-			// Создаём обычного пользователя
 			if (userRepository.findByUsername("user").isEmpty()) {
 				User user = new User("user", passwordEncoder.encode("user"), "user@mail.com");
 				user.setRoles(Set.of(roleUser));

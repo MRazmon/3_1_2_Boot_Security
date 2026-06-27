@@ -7,6 +7,7 @@ import javax.persistence.*;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "users")
@@ -25,7 +26,16 @@ public class User implements UserDetails {
     @Column(unique = true)
     private String email;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "last_name")
+    private String lastName;
+
+    @Column(name = "age")
+    private Integer age;
+
+    @ManyToMany(fetch = FetchType.LAZY)  // ← EAGER → LAZY
     @JoinTable(
             name = "users_roles",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -75,12 +85,43 @@ public class User implements UserDetails {
         this.email = email;
     }
 
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
     public Set<Role> getRoles() {
         return roles;
     }
 
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
+    }
+
+    public String getRolesAsString() {
+        return roles.stream()
+                .map(role -> role.getName().replace("ROLE_", ""))
+                .sorted()
+                .collect(Collectors.joining(" "));
     }
 
 
@@ -109,7 +150,6 @@ public class User implements UserDetails {
         return true;
     }
 
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -129,6 +169,9 @@ public class User implements UserDetails {
                 "id=" + id +
                 ", username='" + username + '\'' +
                 ", email='" + email + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", age=" + age +
                 ", roles=" + roles +
                 '}';
     }
